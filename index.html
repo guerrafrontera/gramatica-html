@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Los números</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #question, #start-screen h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    #progress {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: gray;
+    }
+    #answer, #student-name {
+      font-size: 18px;
+      padding: 8px;
+      width: 300px;
+    }
+    #submit, #start-button {
+      font-size: 18px;
+      padding: 8px 16px;
+      margin-top: 10px;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    #hint {
+      margin-top: 10px;
+      font-size: 16px;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Los números</h1>
+
+  <div id="start-screen">
+    <h2>Por favor, escribe tu nombre para comenzar:</h2>
+    <input type="text" id="student-name" placeholder="Tu nombre">
+    <br>
+    <button id="start-button" onclick="startExercise()">Comenzar</button>
+  </div>
+
+  <div id="exercise" style="display: none;">
+    <div id="progress"></div>
+    <div id="question"></div>
+    <input type="text" id="answer" placeholder="Escribe tu traducción aquí">
+    <br>
+    <button id="submit" onclick="buttonAction()" disabled>Enviar</button>
+    <div id="feedback"></div>
+    <div id="hint"></div>
+  </div>
+
+  <script>
+    const allQuestions = {
+      "100 windows": ["cien ventanas"],
+      "1.000 houses": ["mil casas"],
+      "19 desks": ["diecinueve escritorios"],
+      "2 + 3 = 5": ["Dos más tres son cinco."],
+      "23 girls": ["veintitrés chicas", "veintitrés niñas"]
+    };
+
+    let fullQuestionList = Object.keys(allQuestions);
+    let currentAnswers = [];
+    let errors = [];
+    let totalErrors = 0;
+    let phase = 'normal'; // 'normal' o 'review'
+    let index = 0;
+    let currentQuestion = '';
+    let waitingToContinue = false;
+    let messageBeforeReview = false;
+    let studentName = '';
+
+    function startExercise() {
+      studentName = document.getElementById('student-name').value.trim();
+      if (studentName !== '') {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('exercise').style.display = '';
+        pickQuestion();
+      } else {
+        alert('Por favor, escribe tu nombre.');
+      }
+    }
+
+    function updateProgress() {
+      const currentNumber = index + 1;
+      const total = fullQuestionList.length;
+      document.getElementById('progress').innerText = `Pregunta ${currentNumber} de ${total}`;
+    }
+
+    function pickQuestion() {
+      if (index >= fullQuestionList.length) {
+        if (phase === 'normal') {
+          if (errors.length === 0) {
+            showCompletion();
+          } else {
+            phase = 'review';
+            fullQuestionList = [...errors];
+            errors = [];
+            index = 0;
+            showReviewMessage();
+          }
+        } else if (phase === 'review') {
+          if (errors.length === 0) {
+            showCompletion();
+          } else {
+            fullQuestionList = [...errors];
+            errors = [];
+            index = 0;
+            showReviewMessage();
+          }
+        }
+        return;
+      }
+
+      currentQuestion = fullQuestionList[index];
+      currentAnswers = allQuestions[currentQuestion];
+      document.getElementById('question').innerText = `Traduce al español: '${currentQuestion}'`;
+      document.getElementById('answer').value = '';
+      document.getElementById('answer').disabled = false;
+      document.getElementById('feedback').innerText = '';
+      document.getElementById('hint').innerText = '';
+      document.getElementById('submit').innerText = 'Enviar';
+      document.getElementById('submit').disabled = true;
+      waitingToContinue = false;
+      messageBeforeReview = false;
+      updateProgress();
+      document.getElementById('answer').focus();
+    }
+
+    function showReviewMessage() {
+      document.getElementById('progress').innerText = '';
+      document.getElementById('question').innerText = "¡Vamos a corregir los errores!";
+      document.getElementById('answer').style.display = 'none';
+      document.getElementById('submit').style.display = 'none';
+      document.getElementById('feedback').innerText = '';
+      document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic para continuar';
+      waitingToContinue = true;
+      messageBeforeReview = true;
+    }
+
+    function checkAnswer() {
+      const userAnswer = document.getElementById('answer').value.trim();
+      if (currentAnswers.includes(userAnswer)) {
+        document.getElementById('feedback').innerText = "¡Correcto!";
+        document.getElementById('feedback').style.color = "green";
+      } else {
+        document.getElementById('feedback').innerText = `Incorrecto. Respuesta(s) correcta(s): ${currentAnswers.join(', ')}`;
+        document.getElementById('feedback').style.color = "red";
+        errors.push(currentQuestion);
+        totalErrors++;
+      }
+      document.getElementById('submit').innerText = 'Continuar';
+      document.getElementById('answer').disabled = true;
+      document.getElementById('submit').disabled = false;
+      document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
+      waitingToContinue = true;
+    }
+
+    function showCompletion() {
+      document.getElementById('progress').innerText = '';
+      document.getElementById('question').innerText = `¡Felicitaciones, ${studentName}! Terminaste todas las traducciones.`;
+      document.getElementById('answer').style.display = 'none';
+      document.getElementById('submit').style.display = 'none';
+      document.getElementById('feedback').innerText = `Total de errores cometidos: ${totalErrors}`;
+      document.getElementById('hint').innerText = '';
+    }
+
+    function buttonAction() {
+      if (!waitingToContinue) {
+        checkAnswer();
+      } else {
+        if (messageBeforeReview) {
+          document.getElementById('answer').style.display = '';
+          document.getElementById('submit').style.display = '';
+          document.getElementById('hint').innerText = '';
+          messageBeforeReview = false;
+          pickQuestion();
+        } else {
+          index++;
+          pickQuestion();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (document.getElementById('start-screen').style.display !== 'none') {
+          if (!document.getElementById('start-button').disabled) {
+            startExercise();
+          }
+        } else if (!document.getElementById('submit').disabled) {
+          buttonAction();
+        }
+      }
+    });
+
+    document.getElementById('answer').addEventListener('input', function() {
+      const inputContent = document.getElementById('answer').value.trim();
+      if (!waitingToContinue) {
+        document.getElementById('submit').disabled = inputContent === '';
+      }
+    });
+
+  </script>
+
+</body>
+</html>
