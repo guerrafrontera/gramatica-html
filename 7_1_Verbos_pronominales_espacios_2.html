@@ -182,11 +182,13 @@
         document.getElementById('feedback').innerText = "✅ ¡Correcto!";
         document.getElementById('feedback').style.color = "green";
       } else {
-        totalErrors++;
-        errors.push(currentQuestion);
-        errorDetails.push({ question: currentQuestion, answers: currentAnswers });
         document.getElementById('feedback').innerText = "❌ Incorrecto.";
         document.getElementById('feedback').style.color = "red";
+        if (phase !== 'review') {
+          totalErrors++;
+          errors.push(currentQuestion);
+          errorDetails.push({ question: currentQuestion, answers: currentAnswers });
+        }
       }
 
       document.getElementById('correct-answers').innerText = "Respuestas posibles: " + currentAnswers.join(" / ");
