@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Palabras indefinidas y negativas 2</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #instructions, #start-screen h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    #progress-line {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 10px;
+      font-size: 18px;
+      color: gray;
+    }
+    #question {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    #answer, #student-name {
+      font-size: 18px;
+      padding: 8px;
+      width: 300px;
+    }
+    #submit, #start-button {
+      font-size: 18px;
+      padding: 8px 16px;
+      margin-top: 10px;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    #correct-answers {
+      margin-top: 10px;
+      font-size: 16px;
+      color: gray;
+    }
+    #hint {
+      margin-top: 10px;
+      font-size: 16px;
+      color: gray;
+    }
+    #summary {
+      margin-top: 30px;
+      text-align: left;
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Palabras indefinidas y negativas 2</h1>
+
+  <div id="start-screen">
+    <h2>Por favor, escribe tu nombre para comenzar:</h2>
+    <input type="text" id="student-name" placeholder="Tu nombre">
+    <br>
+    <button id="start-button" onclick="startExercise()" disabled>Comenzar</button>
+  </div>
+
+  <div id="exercise" style="display: none;">
+    <div id="instructions">Instrucciones: Contesta las preguntas negativamente con la palabra negativa apropiada.</div>
+    <div id="progress-line">
+      <div id="progress"></div>
+      <div id="score"></div>
+    </div>
+    <div id="question"></div>
+    <input type="text" id="answer" placeholder="Escribe aquí">
+    <br>
+    <button id="submit" onclick="buttonAction()" disabled>Enviar</button>
+    <div id="feedback"></div>
+    <div id="correct-answers"></div>
+    <div id="hint"></div>
+    <div id="summary"></div>
+  </div>
+
+  <script>
+    const allQuestions = {
+      "¿Hay algo en la maleta?": ["No, no hay nada en la maleta.", "No, no hay nada."],
+      "¿Buscas algo?": ["No, no busco nada."],
+      "¿Escuchaste algo?.": ["No, no escuché nada."],
+      "¿Alguien sabe dónde están mis llaves?": ["No, nadie sabe dónde están tus llaves.", "No, nadie sabe."],
+      "¿Alguien sabe qué hora es?": ["No, nadie sabe qué hora es.", "No, nadie sabe."],
+      "¿Hay alguien en el baño?": ["No, no hay nadie en el baño.", "No, no hay nadie."],
+      "¿Tienes algún libro interesante de historia?": ["No, no tengo ningún libro interesante de historia.", "No, no tengo ninguno."],
+      "¿Buscas a alguno de tus hermanos?": ["No, no busco a ninguno de mis hermanos.", "No, no busco a ninguno.", "No, no busco a ninguno de ellos."],
+      "¿Conoces a algún actor español?": ["No, no conozco a ningún actor español.", "No, no conozco a ninguno."],
+      "¿Quieres alguna bebida antes de salir?": ["No, no quiero ninguna bebida antes de salir.", "No, no quiero ninguna.", "No, no quiero ninguna bebida."],
+      "¿Siempre usas desodorante?": ["No, nunca uso desodorante.", "No, no uso nunca desodorante."],
+      "¿Tu hermano siempre cocina los domingos?.": ["No, mi hermano nunca cocina los domingos.", "No, mi hermano no cocina nunca los domingos.", "No, no cocina nunca los domingos.", "No, nunca cocina los domingos."],
+      "¿Siempre llegas tarde a la escuela?": ["No, nunca llego tarde a la escuela.", "No, no llego nunca tarde a la escuela.", "No, no llego nunca tarde.", "No, nunca llego tarde."],
+      "¿Alguien me llamó?": ["No, nadie te llamó."],
+      "¿Me puedes recomendar algún programa de televisión?": [
+        "No, no te puedo recomendar ningún programa de televisión.",
+        "No, no puedo recomendarte ningún programa de televisión.",
+        "No, no te puedo recomendar ninguno.",
+        "No, no puedo recomendarte ninguno."
+      ]
+    };
+
+    let fullQuestionList = Object.keys(allQuestions);
+    let currentAnswers = [];
+    let errors = [];
+    let errorDetails = [];
+    let totalErrors = 0;
+    let totalCorrect = 0;
+    let phase = 'normal';
+    let index = 0;
+    let currentQuestion = '';
+    let waitingToContinue = false;
+    let studentName = '';
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function startExercise() {
+      studentName = document.getElementById('student-name').value.trim();
+      shuffleArray(fullQuestionList);
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('exercise').style.display = '';
+      pickQuestion();
+    }
+
+    function updateProgress() {
+      const currentNumber = index + 1;
+      const total = fullQuestionList.length;
+      document.getElementById('progress').innerText = `Pregunta ${currentNumber} de ${total}`;
+      document.getElementById('score').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
+    }
+
+    function pickQuestion() {
+      if (index >= fullQuestionList.length) {
+        if (phase === 'normal' || phase === 'review') {
+          if (errors.length === 0) {
+            showCompletion();
+          } else {
+            document.getElementById('question').innerText = '¡Vamos a corregir los errores!';
+            document.getElementById('answer').style.display = 'none';
+            document.getElementById('submit').innerText = 'Continuar';
+            document.getElementById('submit').disabled = false;
+            document.getElementById('feedback').innerText = '';
+            document.getElementById('correct-answers').innerText = '';
+            document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
+            waitingToContinue = true;
+            phase = 'prepare_review';
+            return;
+          }
+        }
+      } else {
+        currentQuestion = fullQuestionList[index];
+        currentAnswers = allQuestions[currentQuestion];
+        document.getElementById('question').innerText = currentQuestion;
+        document.getElementById('answer').value = '';
+        document.getElementById('answer').disabled = false;
+        document.getElementById('answer').style.display = '';
+        document.getElementById('feedback').innerText = '';
+        document.getElementById('correct-answers').innerText = '';
+        document.getElementById('hint').innerText = '';
+        document.getElementById('submit').innerText = 'Enviar';
+        document.getElementById('submit').disabled = true;
+        waitingToContinue = false;
+        updateProgress();
+        document.getElementById('answer').focus();
+      }
+    }
+
+    function checkAnswer() {
+      const userAnswer = document.getElementById('answer').value.trim().toLowerCase();
+      const correct = currentAnswers.some(ans => ans.toLowerCase() === userAnswer);
+      if (correct) {
+        totalCorrect++;
+        document.getElementById('feedback').innerText = "✅ ¡Correcto!";
+        document.getElementById('feedback').style.color = "green";
+      } else {
+        totalErrors++;
+        errors.push(currentQuestion);
+        errorDetails.push({ question: currentQuestion, answers: currentAnswers });
+        document.getElementById('feedback').innerText = "❌ Incorrecto.";
+        document.getElementById('feedback').style.color = "red";
+      }
+
+      document.getElementById('correct-answers').innerText = "Respuestas posibles: " + currentAnswers.join(" / ");
+      document.getElementById('submit').innerText = 'Continuar';
+      document.getElementById('answer').disabled = true;
+      document.getElementById('submit').disabled = false;
+      document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
+      waitingToContinue = true;
+      updateProgress();
+    }
+
+    function showCompletion() {
+      document.getElementById('progress-line').style.display = 'none';
+      document.getElementById('question').innerText = `¡Felicitaciones, ${studentName}! Terminaste el ejercicio.`;
+      document.getElementById('answer').style.display = 'none';
+      document.getElementById('submit').style.display = 'none';
+      document.getElementById('feedback').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
+      document.getElementById('correct-answers').innerText = '';
+      document.getElementById('hint').innerText = '';
+
+      if (errorDetails.length > 0) {
+        let summaryHTML = "<h3>Respuestas incorrectas:</h3><ul>";
+        errorDetails.forEach(entry => {
+          summaryHTML += `<li><strong>${entry.question}</strong><br>Respuestas correctas: ${entry.answers.join(", ")}</li>`;
+        });
+        summaryHTML += "</ul>";
+        document.getElementById('summary').innerHTML = summaryHTML;
+      }
+    }
+
+    function buttonAction() {
+      if (!waitingToContinue) {
+        checkAnswer();
+      } else {
+        if (phase === 'prepare_review') {
+          phase = 'review';
+          fullQuestionList = [...errors];
+          errors = [];
+          index = 0;
+        } else {
+          index++;
+        }
+        pickQuestion();
+      }
+    }
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (document.getElementById('start-screen').style.display !== 'none') {
+          if (!document.getElementById('start-button').disabled) {
+            startExercise();
+          }
+        } else if (!document.getElementById('submit').disabled) {
+          buttonAction();
+        }
+      }
+    });
+
+    document.getElementById('answer').addEventListener('input', function () {
+      const inputContent = document.getElementById('answer').value.trim();
+      if (!waitingToContinue) {
+        document.getElementById('submit').disabled = inputContent === '';
+      }
+    });
+
+    document.getElementById('student-name').addEventListener('input', function () {
+      const inputName = document.getElementById('student-name').value.trim();
+      document.getElementById('start-button').disabled = inputName === '';
+    });
+  </script>
+
+</body>
+</html>
