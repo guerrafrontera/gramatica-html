@@ -61,17 +61,17 @@
 </head>
 <body>
 
-  <h1>Verbos pronominales: espacios 2</h1>
+  <h1>Sustantivos y artículos</h1>
 
   <div id="start-screen">
-    <h2>Por favor, escribe tu nombre para comenzar:</h2>
+    <h2>Por favor, escribe tu nombre para comenzar/Please write your name to start:</h2>
     <input type="text" id="student-name" placeholder="Tu nombre">
     <br>
     <button id="start-button" onclick="startExercise()" disabled>Comenzar</button>
   </div>
 
   <div id="exercise" style="display: none;">
-    <div id="instructions">Instrucciones: Escribe el plural. Ejemplo: PREGUNTA: el cuaderno RESPUESTA: los cuadernos</div>
+    <div id="instructions">Instrucciones: Escribe el plural de los siguientes sintagmas. EJEMPLO/EXAMPLE: PREGUNTA/QUESTION: el cuaderno RESPUESTA/ANSWER: los cuadernos</div>
     <div id="progress-line">
       <div id="progress"></div>
       <div id="score"></div>
@@ -90,19 +90,19 @@
     const allQuestions = {
          "un autobús": ["unos autobuses"],
       "el hombre": ["los hombres"],
-      "El señor Pérez ___ (irse) Roxbury Latin porque prefiere enseñar en una escuela de chicos y chicas.": ["se va de"],
-      "Tomás y yo ___ (acordarse) nuestra abuela Sofía, una gran actriz.": ["nos acordamos de"],
-      "Mi abuelo ___ (ponerse) furioso cuando no encuentra su rasuradora eléctrica.": ["se pone"],
-      "Vosotros ___ (ponerse) tristes cuando está nublado o llueve.": ["os ponéis"],
-      "(yo) ___ (ponerse) contento cuando hace buen tiempo.": ["Me pongo"],
-      "(yo) ___ (preocuparse) la situación económica del país.": ["Me preocupo por"],
-      "Julia ___ (probarse) dos blusas en el probador de damas.": ["se prueba"],
-      "Francisco y Fernando ___ (sentarse) todos los días al lado de Gabriela, una chica muy bonita e inteligente.": ["se sientan"],
-      "(tú) ___ (lavarse) el pelo con mucho champú.": ["Te lavas"],
-      "Mi hermana ___ (pintarse) las uñas en el cuarto de baño.": ["se pinta"],
-      "Mi primo ___ (enjuagarse) la boca con Listerine por la mañana, por la tarde y por la noche.": ["se enjuaga"],
-      "(yo) ___ (cortarse) las uñas con tijeras porque no me gusta el cortaúñas.": ["Me corto"],
-      "Ellos ___ (quedarse) casa hoy porque tienen mucha tarea de matemáticas.": ["se quedan en"]
+      "la mujer": ["las mujeres"],
+      "un lápiz": ["unos lápices"],
+      "una mano": ["unas manos"],
+      "el cuaderno": ["los cuadernos"],
+      "la conversación": ["las conversaciones"],
+      "un número": ["unos números"],
+      "una maleta": ["unas maletas"],
+      "el chico": ["los chicos"],
+      "la chica": ["las chicas"],
+      "un joven": ["unos jóvenes"],
+      "una joven": ["unas jóvenes"],
+      "el turista": ["los turistas"],
+      "la turista": ["las turistas"]
     };
 
     let fullQuestionList = Object.keys(allQuestions);
