@@ -71,7 +71,7 @@
   </div>
 
   <div id="exercise" style="display: none;">
-    <div id="instructions">Instrucciones: Escribe el plural o el singular de los siguientes artículos y sustantivos.</div>
+    <div id="instructions">Instrucciones: Escribe el plural. Ejemplo: PREGUNTA: el cuaderno RESPUESTA: los cuadernos</div>
     <div id="progress-line">
       <div id="progress"></div>
       <div id="score"></div>
@@ -88,8 +88,8 @@
 
   <script>
     const allQuestions = {
-         "Vosotros ___ (despedirse) vuestros padres antes de iros de viaje.": ["os despedís de"],
-      "(tú) ___ (enojarse) Samuel porque dice muchas mentiras y no usa hilo dental.": ["Te enojas con"],
+         "un autobús": ["unos autobuses"],
+      "el hombre": ["los hombres"],
       "El señor Pérez ___ (irse) Roxbury Latin porque prefiere enseñar en una escuela de chicos y chicas.": ["se va de"],
       "Tomás y yo ___ (acordarse) nuestra abuela Sofía, una gran actriz.": ["nos acordamos de"],
       "Mi abuelo ___ (ponerse) furioso cuando no encuentra su rasuradora eléctrica.": ["se pone"],
