@@ -22,41 +22,13 @@
       font-size: 18px;
       color: gray;
     }
-    #question {
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
-    #answer, #student-name {
-      font-size: 18px;
-      padding: 8px;
-      width: 300px;
-    }
-    #submit, #start-button {
-      font-size: 18px;
-      padding: 8px 16px;
-      margin-top: 10px;
-    }
-    #feedback {
-      margin-top: 20px;
-      font-size: 18px;
-    }
-    #correct-answers {
-      margin-top: 10px;
-      font-size: 16px;
-      color: gray;
-    }
-    #hint {
-      margin-top: 10px;
-      font-size: 16px;
-      color: gray;
-    }
-    #summary {
-      margin-top: 30px;
-      text-align: left;
-      width: 60%;
-      margin-left: auto;
-      margin-right: auto;
-    }
+    #question { font-size: 24px; margin-bottom: 10px; }
+    #answer, #student-name { font-size: 18px; padding: 8px; width: 300px; }
+    #submit, #start-button { font-size: 18px; padding: 8px 16px; margin-top: 10px; }
+    #feedback { margin-top: 20px; font-size: 18px; }
+    #correct-answers { margin-top: 10px; font-size: 16px; color: gray; }
+    #hint { margin-top: 10px; font-size: 16px; color: gray; }
+    #summary { margin-top: 30px; text-align: left; width: 60%; margin-left: auto; margin-right: auto; }
   </style>
 </head>
 <body>
@@ -87,10 +59,10 @@
   </div>
 
   <script>
-    // === CONFIGURA AQUÍ TU WEBHOOK (Google Apps Script) ===
-    const WEBHOOK_URL = "https://script.google.com/a/macros/roxburylatin.org/s/AKfycby-TjJ8D6vNhc3poE2DZUf5VPPtAve5oYW5SAhvXc3jytkN0e2ByEK9ybcKZnprDXrA/exec";
+    // === URL de tu Web App (SIN /a/) ===
+    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxSlo-Ri5lp1L4Tt4PtjgRy8rKdNqKb_LfDTzBi78uS3GAZw0chgxZy2RIos038I4Yq-g/exec";
 
-    // Envío sin preflight: mandamos como formulario (URL-encoded)
+    // Envío sin preflight: se manda como formulario URL-encoded
     async function sendResultsToTeacher(payload) {
       try {
         const form = new URLSearchParams();
@@ -98,10 +70,9 @@
 
         const res = await fetch(WEBHOOK_URL, {
           method: "POST",
-          body: form // sin Content-Type explícito
+          body: form // sin Content-Type explícito => evita preflight/CORS
         });
 
-        // Intentamos parsear JSON; si fuese HTML (login), fallará
         const data = await res.json().catch(() => ({}));
         console.log("Envío de resultados:", data);
 
@@ -126,7 +97,7 @@
       const total = totalCorrect + totalErrors;
       const percent = total === 0 ? 0 : Math.round((totalCorrect / total) * 1000) / 10; // 1 decimal
 
-      // Lista de errores ÚNICOS y legibles
+      // Lista de errores únicos y legibles
       const seen = new Set();
       const uniqueErrorList = [];
       errorDetails.forEach(({ question, answers }) => {
@@ -140,12 +111,12 @@
         studentName,
         totalCorrect,
         totalErrors,
-        percentCorrect: percent, // p.ej. 83.3
+        percentCorrect: percent,
         errorList: uniqueErrorList
       };
     }
 
-    // === Tu lógica de ejercicio ===
+    // === Lógica del ejercicio ===
     const allQuestions = {
       "el niño": ["la niña"],
       "el pasajero": ["la pasajera"],
