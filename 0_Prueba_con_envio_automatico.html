@@ -65,7 +65,7 @@
       return byH1 || document.title || "Ejercicio";
     }
 
-    // Construye payload y además devuelve el título para uso del form
+    // Construye payload
     function buildResultsPayload() {
       const exerciseTitle = getExerciseTitle();
       return {
@@ -91,18 +91,23 @@
       return uniqueErrorList;
     }
 
-    // Envío sin preflight: formulario URL-encoded
+    // Envío sin preflight: application/x-www-form-urlencoded
     async function sendResultsToTeacher(payload) {
       const el = document.getElementById('summary');
       try {
         const form = new URLSearchParams();
-        // Campo principal
+        // Campo principal (JSON)
         form.append("payload", JSON.stringify(payload));
         // Redundancia explícita (para e.parameter.* en el servidor)
         form.append("exerciseTitle", payload.exerciseTitle);
         form.append("title", payload.title);
 
-        const res = await fetch(WEBHOOK_URL, { method: "POST", body: form });
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+          body: form.toString()
+        });
+
         const text = await res.text();
         let data = {};
         try { data = JSON.parse(text); } catch(_) {}
@@ -115,6 +120,11 @@
           ? `✅ Resultados enviados al profesor.`
           : "⚠️ No se pudieron enviar los resultados automáticamente.";
         el.appendChild(nota);
+
+        // (Opcional) Muestra en consola el título que el servidor asegura haber recibido
+        if (data && data.receivedTitle) {
+          console.log("Servidor recibió título:", data.receivedTitle);
+        }
 
         return ok;
       } catch (e) {
@@ -323,9 +333,7 @@
       if (event.key === 'Enter') {
         event.preventDefault();
         if (document.getElementById('start-screen').style.display !== 'none') {
-          if (!document.getElementById('start-button').disabled) {
-            startExercise();
-          }
+          if (!document.getElementById('start-button').disabled) startExercise();
         } else if (!document.getElementById('submit').disabled) {
           buttonAction();
         }
