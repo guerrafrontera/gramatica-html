@@ -9,7 +9,7 @@
     #progress-line { display: flex; justify-content: center; gap: 30px; margin-bottom: 10px; font-size: 18px; color: gray; }
     #question { font-size: 24px; margin-bottom: 10px; }
     #answer, #student-name { font-size: 18px; padding: 8px; width: 300px; }
-    #submit, #start-button { font-size: 18px; padding: 8px 16px; margin-top: 10px; }
+    #submit, #start-button, #send-teacher { font-size: 18px; padding: 8px 16px; margin-top: 10px; }
     #feedback { margin-top: 20px; font-size: 18px; }
     #correct-answers { margin-top: 10px; font-size: 16px; color: gray; }
     #hint { margin-top: 10px; font-size: 16px; color: gray; }
@@ -41,6 +41,9 @@
     <div id="correct-answers"></div>
     <div id="hint"></div>
     <div id="summary"></div>
+
+    <!-- NUEVO: botón opcional para enviar al profesor -->
+    <button id="send-teacher" style="display:none; margin-top: 16px;">Enviar al profesor</button>
   </div>
 
   <script>
@@ -49,27 +52,45 @@
 
     // Envío sin preflight: formulario URL-encoded
     async function sendResultsToTeacher(payload) {
+      const el = document.getElementById('summary');
       try {
         const form = new URLSearchParams();
         form.append("payload", JSON.stringify(payload));
 
         const res = await fetch(WEBHOOK_URL, { method: "POST", body: form });
         const data = await res.json().catch(() => ({}));
+        const ok = !!(data && data.ok);
 
-        const el = document.getElementById('summary');
         const nota = document.createElement('p');
-        nota.style.color = (data && data.ok) ? 'green' : 'red';
-        nota.textContent = (data && data.ok)
+        nota.style.color = ok ? 'green' : 'red';
+        nota.textContent = ok
           ? "✅ Resultados enviados al profesor."
           : "⚠️ No se pudieron enviar los resultados automáticamente.";
         el.appendChild(nota);
+
+        return ok;
       } catch (e) {
         console.error("Error al enviar resultados:", e);
-        const el = document.getElementById('summary');
         const nota = document.createElement('p');
         nota.style.color = 'red';
         nota.textContent = "⚠️ No se pudieron enviar los resultados automáticamente.";
         el.appendChild(nota);
+        return false;
+      }
+    }
+
+    async function handleSendToTeacher() {
+      const btn = document.getElementById('send-teacher');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Enviando…";
+
+      const ok = await sendResultsToTeacher(buildResultsPayload());
+      if (ok) {
+        btn.textContent = "Enviado ✅";
+      } else {
+        btn.textContent = originalText;
+        btn.disabled = false; // permitir reintento
       }
     }
 
@@ -88,7 +109,7 @@
       });
 
       return {
-        exerciseTitle: document.title,  // NUEVO: título del ejercicio
+        exerciseTitle: document.title,   // se envía al servidor
         studentName,
         totalCorrect,
         totalErrors,
@@ -229,9 +250,11 @@
         document.getElementById('summary').innerHTML = "<h3>Errores cometidos durante el ejercicio:</h3><p>Ninguno</p>";
       }
 
-      // Enviar resultados automáticamente por webhook/email
-      const payload = buildResultsPayload();
-      sendResultsToTeacher(payload);
+      // Mostrar el botón opcional de envío
+      const sendBtn = document.getElementById('send-teacher');
+      sendBtn.style.display = 'inline-block';
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Enviar al profesor';
     }
 
     function buttonAction() {
@@ -276,6 +299,9 @@
       const inputName = document.getElementById('student-name').value.trim();
       document.getElementById('start-button').disabled = inputName === '';
     });
+
+    // NUEVO: listener del botón "Enviar al profesor"
+    document.getElementById('send-teacher').addEventListener('click', handleSendToTeacher);
   </script>
 
 </body>
