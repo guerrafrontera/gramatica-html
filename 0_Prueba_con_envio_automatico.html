@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Sustantivos y artículos 1: singular-plural</title>
+  <title>Sustantivos y artículos 3: masculino-femenino</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -61,17 +61,17 @@
 </head>
 <body>
 
-  <h1>Sustantivos y artículos 1: singular-plural</h1>
+  <h1>Sustantivos y artículos 3: masculino-femenino</h1>
 
   <div id="start-screen">
-    <h2>Por favor, escribe tu nombre para comenzar/Please write your name to start:</h2>
+    <h2>Por favor, escribe tu nombre para comenzar:</h2>
     <input type="text" id="student-name" placeholder="Tu nombre">
     <br>
     <button id="start-button" onclick="startExercise()" disabled>Comenzar</button>
   </div>
 
   <div id="exercise" style="display: none;">
-    <div id="instructions">Instrucciones: Escribe el plural de los siguientes sintagmas./Write the plural of the following phrases. EJEMPLO/EXAMPLE: PREGUNTA/QUESTION: el cuaderno RESPUESTA/ANSWER: los cuadernos</div>
+    <div id="instructions">Instrucciones: Escribe el femenino de los siguientes sintagmas. EJEMPLO: PREGUNTA: el joven RESPUESTA: la joven</div>
     <div id="progress-line">
       <div id="progress"></div>
       <div id="score"></div>
@@ -86,244 +86,245 @@
     <div id="summary"></div>
   </div>
 
-<script>
-  // === CONFIGURA AQUÍ TU WEBHOOK (Google Apps Script) ===
-  // Usará tu despliegue para enviar el correo a ernesto.guerra@roxburylatin.org
-  const WEBHOOK_URL = "https://script.google.com/a/macros/roxburylatin.org/s/AKfycby-TjJ8D6vNhc3poE2DZUf5VPPtAve5oYW5SAhvXc3jytkN0e2ByEK9ybcKZnprDXrA/exec";
+  <script>
+    // === CONFIGURA AQUÍ TU WEBHOOK (Google Apps Script) ===
+    const WEBHOOK_URL = "https://script.google.com/a/macros/roxburylatin.org/s/AKfycby-TjJ8D6vNhc3poE2DZUf5VPPtAve5oYW5SAhvXc3jytkN0e2ByEK9ybcKZnprDXrA/exec";
 
-  // --- Función para enviar resultados al profesor ---
-  async function sendResultsToTeacher(payload) {
-    try {
-      const res = await fetch(WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json().catch(() => ({}));
-      console.log("Envío de resultados:", data);
-      const el = document.getElementById('summary');
-      const nota = document.createElement('p');
-      nota.style.color = (data && data.ok) ? 'green' : 'red';
-      nota.textContent = (data && data.ok)
-        ? "✅ Resultados enviados al profesor."
-        : "⚠️ No se pudieron enviar los resultados automáticamente.";
-      el.appendChild(nota);
-    } catch (e) {
-      console.error("Error al enviar resultados:", e);
-      const el = document.getElementById('summary');
-      const nota = document.createElement('p');
-      nota.style.color = 'red';
-      nota.textContent = "⚠️ No se pudieron enviar los resultados automáticamente.";
-      el.appendChild(nota);
+    // Envío sin preflight: mandamos como formulario (URL-encoded)
+    async function sendResultsToTeacher(payload) {
+      try {
+        const form = new URLSearchParams();
+        form.append("payload", JSON.stringify(payload));
+
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          body: form // sin Content-Type explícito
+        });
+
+        // Intentamos parsear JSON; si fuese HTML (login), fallará
+        const data = await res.json().catch(() => ({}));
+        console.log("Envío de resultados:", data);
+
+        const el = document.getElementById('summary');
+        const nota = document.createElement('p');
+        nota.style.color = (data && data.ok) ? 'green' : 'red';
+        nota.textContent = (data && data.ok)
+          ? "✅ Resultados enviados al profesor."
+          : "⚠️ No se pudieron enviar los resultados automáticamente.";
+        el.appendChild(nota);
+      } catch (e) {
+        console.error("Error al enviar resultados:", e);
+        const el = document.getElementById('summary');
+        const nota = document.createElement('p');
+        nota.style.color = 'red';
+        nota.textContent = "⚠️ No se pudieron enviar los resultados automáticamente.";
+        el.appendChild(nota);
+      }
     }
-  }
 
-  // --- Construye el payload con los datos requeridos ---
-  function buildResultsPayload() {
-    const total = totalCorrect + totalErrors;
-    const percent = total === 0 ? 0 : Math.round((totalCorrect / total) * 1000) / 10; // 1 decimal
+    function buildResultsPayload() {
+      const total = totalCorrect + totalErrors;
+      const percent = total === 0 ? 0 : Math.round((totalCorrect / total) * 1000) / 10; // 1 decimal
 
-    // Lista de errores únicos, con formato legible
-    const seen = new Set();
-    const uniqueErrorList = [];
-    errorDetails.forEach(({ question, answers }) => {
-      if (!seen.has(question)) {
-        seen.add(question);
-        uniqueErrorList.push(`${question} → correctas: ${answers.join(" / ")}`);
+      // Lista de errores ÚNICOS y legibles
+      const seen = new Set();
+      const uniqueErrorList = [];
+      errorDetails.forEach(({ question, answers }) => {
+        if (!seen.has(question)) {
+          seen.add(question);
+          uniqueErrorList.push(`${question} → correctas: ${answers.join(" / ")}`);
+        }
+      });
+
+      return {
+        studentName,
+        totalCorrect,
+        totalErrors,
+        percentCorrect: percent, // p.ej. 83.3
+        errorList: uniqueErrorList
+      };
+    }
+
+    // === Tu lógica de ejercicio ===
+    const allQuestions = {
+      "el niño": ["la niña"],
+      "el pasajero": ["la pasajera"],
+      "un estudiante": ["una estudiante"],
+      "un turista": ["una turista"],
+      "el hombre": ["la mujer"],
+      "el conductor": ["la conductora"],
+      "un profesor": ["una profesora"],
+      "un chico": ["una chica"]
+    };
+
+    let fullQuestionList = Object.keys(allQuestions);
+    let currentAnswers = [];
+    let errors = [];
+    let errorDetails = [];
+    let totalErrors = 0;
+    let totalCorrect = 0;
+    let phase = 'normal';
+    let index = 0;
+    let currentQuestion = '';
+    let waitingToContinue = false;
+    let studentName = '';
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function startExercise() {
+      studentName = document.getElementById('student-name').value.trim();
+      shuffleArray(fullQuestionList);
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('exercise').style.display = '';
+      pickQuestion();
+    }
+
+    function updateProgress() {
+      const currentNumber = index + 1;
+      const total = fullQuestionList.length;
+      document.getElementById('progress').innerText = `Pregunta ${currentNumber} de ${total}`;
+      document.getElementById('score').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
+    }
+
+    function pickQuestion() {
+      if (index >= fullQuestionList.length) {
+        if (errors.length === 0) {
+          showCompletion();
+        } else {
+          document.getElementById('question').innerText = '¡Vamos a corregir los errores!';
+          document.getElementById('answer').style.display = 'none';
+          document.getElementById('submit').innerText = 'Continuar';
+          document.getElementById('submit').disabled = false;
+          document.getElementById('submit').style.display = '';
+          document.getElementById('feedback').innerText = '';
+          document.getElementById('correct-answers').innerText = '';
+          document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
+          document.getElementById('summary').innerHTML = '';
+          waitingToContinue = true;
+          phase = 'prepare_review';
+          return;
+        }
+      } else {
+        currentQuestion = fullQuestionList[index];
+        currentAnswers = allQuestions[currentQuestion];
+        document.getElementById('question').innerText = currentQuestion;
+        document.getElementById('answer').value = '';
+        document.getElementById('answer').disabled = false;
+        document.getElementById('answer').style.display = '';
+        document.getElementById('feedback').innerText = '';
+        document.getElementById('correct-answers').innerText = '';
+        document.getElementById('hint').innerText = '';
+        document.getElementById('submit').innerText = 'Enviar';
+        document.getElementById('submit').disabled = true;
+        document.getElementById('submit').style.display = '';
+        waitingToContinue = false;
+        updateProgress();
+        document.getElementById('answer').focus();
+      }
+    }
+
+    function checkAnswer() {
+      const userAnswer = document.getElementById('answer').value.trim();
+      const correct = currentAnswers.some(ans => ans === userAnswer);
+      if (correct) {
+        totalCorrect++;
+        document.getElementById('feedback').innerText = "✅ ¡Correcto!";
+        document.getElementById('feedback').style.color = "green";
+      } else {
+        document.getElementById('feedback').innerText = "❌ Incorrecto.";
+        document.getElementById('feedback').style.color = "red";
+        totalErrors++;
+        errors.push(currentQuestion);
+        errorDetails.push({ question: currentQuestion, answers: currentAnswers });
+      }
+
+      document.getElementById('correct-answers').innerText = "Respuestas posibles: " + currentAnswers.join(" / ");
+      document.getElementById('submit').innerText = 'Continuar';
+      document.getElementById('answer').disabled = true;
+      document.getElementById('submit').disabled = false;
+      document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
+      waitingToContinue = true;
+      updateProgress();
+    }
+
+    function showCompletion() {
+      document.getElementById('progress-line').style.display = 'none';
+      document.getElementById('question').innerText = `¡Felicitaciones, ${studentName}! Terminaste el ejercicio.`;
+      document.getElementById('answer').style.display = 'none';
+      document.getElementById('submit').style.display = 'none';
+      document.getElementById('feedback').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
+      document.getElementById('correct-answers').innerText = '';
+      document.getElementById('hint').innerText = '';
+
+      // Resumen de errores únicos
+      if (errorDetails.length > 0) {
+        const seen = new Set();
+        let summaryHTML = "<h3>Errores cometidos durante el ejercicio:</h3><ul>";
+        errorDetails.forEach(entry => {
+          if (!seen.has(entry.question)) {
+            seen.add(entry.question);
+            summaryHTML += `<li><strong>${entry.question}</strong><br>Respuestas correctas: ${entry.answers.join(", ")}</li>`;
+          }
+        });
+        summaryHTML += "</ul>";
+        document.getElementById('summary').innerHTML = summaryHTML;
+      } else {
+        document.getElementById('summary').innerHTML = "<h3>Errores cometidos durante el ejercicio:</h3><p>Ninguno</p>";
+      }
+
+      // Enviar resultados automáticamente por webhook/email
+      const payload = buildResultsPayload();
+      sendResultsToTeacher(payload);
+    }
+
+    function buttonAction() {
+      if (!waitingToContinue) {
+        checkAnswer();
+      } else {
+        if (phase === 'prepare_review') {
+          phase = 'review';
+          fullQuestionList = [...errors];
+          errors = [];
+          index = 0;
+          waitingToContinue = false;
+          pickQuestion();
+        } else {
+          index++;
+          pickQuestion();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (document.getElementById('start-screen').style.display !== 'none') {
+          if (!document.getElementById('start-button').disabled) {
+            startExercise();
+          }
+        } else if (!document.getElementById('submit').disabled) {
+          buttonAction();
+        }
       }
     });
 
-    return {
-      studentName,
-      totalCorrect,
-      totalErrors,
-      percentCorrect: percent, // número (ej. 83.3)
-      errorList: uniqueErrorList
-    };
-  }
-
-  // === Tu lógica original (con pequeñas adiciones) ===
-
-  const allQuestions = {
-    "el niño": ["la niña"],
-    "el pasajero": ["la pasajera"],
-    "un estudiante": ["una estudiante"],
-    "un turista": ["una turista"],
-    "el hombre": ["la mujer"],
-    "el conductor": ["la conductora"],
-    "un profesor": ["una profesora"],
-    "un chico": ["una chica"]
-  };
-
-  let fullQuestionList = Object.keys(allQuestions);
-  let currentAnswers = [];
-  let errors = [];
-  let errorDetails = [];
-  let totalErrors = 0;
-  let totalCorrect = 0;
-  let phase = 'normal';
-  let index = 0;
-  let currentQuestion = '';
-  let waitingToContinue = false;
-  let studentName = '';
-
-  function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-  }
-
-  function startExercise() {
-    studentName = document.getElementById('student-name').value.trim();
-    shuffleArray(fullQuestionList);
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('exercise').style.display = '';
-    pickQuestion();
-  }
-
-  function updateProgress() {
-    const currentNumber = index + 1;
-    const total = fullQuestionList.length;
-    document.getElementById('progress').innerText = `Pregunta ${currentNumber} de ${total}`;
-    document.getElementById('score').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
-  }
-
-  function pickQuestion() {
-    if (index >= fullQuestionList.length) {
-      if (errors.length === 0) {
-        showCompletion();
-      } else {
-        document.getElementById('question').innerText = '¡Vamos a corregir los errores!';
-        document.getElementById('answer').style.display = 'none';
-        document.getElementById('submit').innerText = 'Continuar';
-        document.getElementById('submit').disabled = false;
-        document.getElementById('submit').style.display = '';
-        document.getElementById('feedback').innerText = '';
-        document.getElementById('correct-answers').innerText = '';
-        document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
-        document.getElementById('summary').innerHTML = '';
-        waitingToContinue = true;
-        phase = 'prepare_review';
-        return;
+    document.getElementById('answer').addEventListener('input', function () {
+      const inputContent = document.getElementById('answer').value.trim();
+      if (!waitingToContinue) {
+        document.getElementById('submit').disabled = inputContent === '';
       }
-    } else {
-      currentQuestion = fullQuestionList[index];
-      currentAnswers = allQuestions[currentQuestion];
-      document.getElementById('question').innerText = currentQuestion;
-      document.getElementById('answer').value = '';
-      document.getElementById('answer').disabled = false;
-      document.getElementById('answer').style.display = '';
-      document.getElementById('feedback').innerText = '';
-      document.getElementById('correct-answers').innerText = '';
-      document.getElementById('hint').innerText = '';
-      document.getElementById('submit').innerText = 'Enviar';
-      document.getElementById('submit').disabled = true;
-      document.getElementById('submit').style.display = '';
-      waitingToContinue = false;
-      updateProgress();
-      document.getElementById('answer').focus();
-    }
-  }
+    });
 
-  function checkAnswer() {
-    const userAnswer = document.getElementById('answer').value.trim();
-    const correct = currentAnswers.some(ans => ans === userAnswer);
-    if (correct) {
-      totalCorrect++;
-      document.getElementById('feedback').innerText = "✅ ¡Correcto!";
-      document.getElementById('feedback').style.color = "green";
-    } else {
-      document.getElementById('feedback').innerText = "❌ Incorrecto.";
-      document.getElementById('feedback').style.color = "red";
-      totalErrors++;
-      errors.push(currentQuestion);
-      errorDetails.push({ question: currentQuestion, answers: currentAnswers });
-    }
-
-    document.getElementById('correct-answers').innerText = "Respuestas posibles: " + currentAnswers.join(" / ");
-    document.getElementById('submit').innerText = 'Continuar';
-    document.getElementById('answer').disabled = true;
-    document.getElementById('submit').disabled = false;
-    document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
-    waitingToContinue = true;
-    updateProgress();
-  }
-
-  // === MODIFICADA: ahora también envía los resultados al final ===
-  function showCompletion() {
-    document.getElementById('progress-line').style.display = 'none';
-    document.getElementById('question').innerText = `¡Felicitaciones, ${studentName}! Terminaste el ejercicio.`;
-    document.getElementById('answer').style.display = 'none';
-    document.getElementById('submit').style.display = 'none';
-    document.getElementById('feedback').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
-    document.getElementById('correct-answers').innerText = '';
-    document.getElementById('hint').innerText = '';
-
-    // Mostrar resumen de errores únicos
-    if (errorDetails.length > 0) {
-      const seen = new Set();
-      let summaryHTML = "<h3>Errores cometidos durante el ejercicio:</h3><ul>";
-      errorDetails.forEach(entry => {
-        if (!seen.has(entry.question)) {
-          seen.add(entry.question);
-          summaryHTML += `<li><strong>${entry.question}</strong><br>Respuestas correctas: ${entry.answers.join(", ")}</li>`;
-        }
-      });
-      summaryHTML += "</ul>";
-      document.getElementById('summary').innerHTML = summaryHTML;
-    } else {
-      document.getElementById('summary').innerHTML = "<h3>Errores cometidos durante el ejercicio:</h3><p>Ninguno</p>";
-    }
-
-    // === NUEVO: enviar resultados automáticamente por webhook/email ===
-    const payload = buildResultsPayload();
-    sendResultsToTeacher(payload);
-  }
-
-  function buttonAction() {
-    if (!waitingToContinue) {
-      checkAnswer();
-    } else {
-      if (phase === 'prepare_review') {
-        phase = 'review';
-        fullQuestionList = [...errors];
-        errors = [];
-        index = 0;
-        waitingToContinue = false;
-        pickQuestion();
-      } else {
-        index++;
-        pickQuestion();
-      }
-    }
-  }
-
-  document.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      if (document.getElementById('start-screen').style.display !== 'none') {
-        if (!document.getElementById('start-button').disabled) {
-          startExercise();
-        }
-      } else if (!document.getElementById('submit').disabled) {
-        buttonAction();
-      }
-    }
-  });
-
-  document.getElementById('answer').addEventListener('input', function () {
-    const inputContent = document.getElementById('answer').value.trim();
-    if (!waitingToContinue) {
-      document.getElementById('submit').disabled = inputContent === '';
-    }
-  });
-
-  document.getElementById('student-name').addEventListener('input', function () {
-    const inputName = document.getElementById('student-name').value.trim();
-    document.getElementById('start-button').disabled = inputName === '';
-  });
-</script>
+    document.getElementById('student-name').addEventListener('input', function () {
+      const inputName = document.getElementById('student-name').value.trim();
+      document.getElementById('start-button').disabled = inputName === '';
+    });
+  </script>
 
 </body>
 </html>
