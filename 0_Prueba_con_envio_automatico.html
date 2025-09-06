@@ -11,7 +11,7 @@
     #answer, #student-name { font-size: 18px; padding: 8px; width: 300px; }
     #submit, #start-button, #send-teacher { font-size: 18px; padding: 8px 16px; margin-top: 10px; }
     #feedback { margin-top: 20px; font-size: 18px; }
-    #grade { margin-top: 6px; font-size: 18px; font-weight: bold; display: none; } /* NOTA OCULTA POR DEFECTO */
+    #grade { margin-top: 6px; font-size: 18px; font-weight: bold; display: none; } /* Nota oculta durante el ejercicio */
     #correct-answers { margin-top: 10px; font-size: 16px; color: gray; }
     #hint { margin-top: 10px; font-size: 16px; color: gray; }
     #summary { margin-top: 30px; text-align: left; width: 60%; margin-left: auto; margin-right: auto; }
@@ -49,13 +49,46 @@
   </div>
 
   <script>
-    // URL del Web App (SIN /a/)
+    // URL de tu Web App (SIN /a/)
     const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxSlo-Ri5lp1L4Tt4PtjgRy8rKdNqKb_LfDTzBi78uS3GAZw0chgxZy2RIos038I4Yq-g/exec";
 
-    // === Utilidad: porcentaje con 1 decimal ===
+    // % con 1 decimal
     function computePercent() {
       const total = totalCorrect + totalErrors;
       return total === 0 ? 0 : Math.round((totalCorrect / total) * 1000) / 10;
+    }
+
+    // Lee el título desde el H1 (fallback: <title>)
+    function getExerciseTitle() {
+      const h1 = document.getElementById('exercise-h1');
+      const byH1 = h1 && h1.textContent ? h1.textContent.trim() : "";
+      return byH1 || document.title || "Ejercicio";
+    }
+
+    // Construye payload y además devuelve el título para uso del form
+    function buildResultsPayload() {
+      const exerciseTitle = getExerciseTitle();
+      return {
+        exerciseTitle,                 // en payload
+        title: exerciseTitle,          // alias en payload
+        studentName,
+        totalCorrect,
+        totalErrors,
+        percentCorrect: computePercent(),
+        errorList: buildUniqueErrorList()
+      };
+    }
+
+    function buildUniqueErrorList() {
+      const seen = new Set();
+      const uniqueErrorList = [];
+      errorDetails.forEach(({ question, answers }) => {
+        if (!seen.has(question)) {
+          seen.add(question);
+          uniqueErrorList.push(`${question} → correctas: ${answers.join(" / ")}`);
+        }
+      });
+      return uniqueErrorList;
     }
 
     // Envío sin preflight: formulario URL-encoded
@@ -63,7 +96,11 @@
       const el = document.getElementById('summary');
       try {
         const form = new URLSearchParams();
+        // Campo principal
         form.append("payload", JSON.stringify(payload));
+        // Redundancia explícita (para e.parameter.* en el servidor)
+        form.append("exerciseTitle", payload.exerciseTitle);
+        form.append("title", payload.title);
 
         const res = await fetch(WEBHOOK_URL, { method: "POST", body: form });
         const text = await res.text();
@@ -103,35 +140,6 @@
         btn.textContent = originalText;
         btn.disabled = false; // permitir reintento
       }
-    }
-
-    function getExerciseTitle() {
-      const h1 = document.getElementById('exercise-h1');
-      const byH1 = h1 && h1.textContent ? h1.textContent.trim() : "";
-      return byH1 || document.title || "Ejercicio";
-    }
-
-    function buildResultsPayload() {
-      return {
-        exerciseTitle: getExerciseTitle(),
-        studentName,
-        totalCorrect,
-        totalErrors,
-        percentCorrect: computePercent(),
-        errorList: buildUniqueErrorList()
-      };
-    }
-
-    function buildUniqueErrorList() {
-      const seen = new Set();
-      const uniqueErrorList = [];
-      errorDetails.forEach(({ question, answers }) => {
-        if (!seen.has(question)) {
-          seen.add(question);
-          uniqueErrorList.push(`${question} → correctas: ${answers.join(" / ")}`);
-        }
-      });
-      return uniqueErrorList;
     }
 
     // === Lógica del ejercicio ===
@@ -183,7 +191,6 @@
       const currentNumber = index + 1;
       const total = fullQuestionList.length;
       document.getElementById('progress').innerText = `Pregunta ${currentNumber} de ${total}`;
-      // Solo aciertos y errores (SIN nota mientras se trabaja)
       document.getElementById('score').innerText =
         `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
     }
