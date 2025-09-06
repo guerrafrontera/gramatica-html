@@ -18,7 +18,7 @@
 </head>
 <body>
 
-  <h1>Sustantivos y artículos 3: masculino-femenino</h1>
+  <h1 id="exercise-h1">Sustantivos y artículos 3: masculino-femenino</h1>
 
   <div id="start-screen">
     <h2>Por favor, escribe tu nombre para comenzar:</h2>
@@ -42,12 +42,12 @@
     <div id="hint"></div>
     <div id="summary"></div>
 
-    <!-- NUEVO: botón opcional para enviar al profesor -->
+    <!-- Botón opcional para enviar al profesor -->
     <button id="send-teacher" style="display:none; margin-top: 16px;">Enviar al profesor</button>
   </div>
 
   <script>
-    // === URL de tu Web App (SIN /a/) ===
+    // URL del Web App (SIN /a/)
     const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxSlo-Ri5lp1L4Tt4PtjgRy8rKdNqKb_LfDTzBi78uS3GAZw0chgxZy2RIos038I4Yq-g/exec";
 
     // Envío sin preflight: formulario URL-encoded
@@ -58,13 +58,16 @@
         form.append("payload", JSON.stringify(payload));
 
         const res = await fetch(WEBHOOK_URL, { method: "POST", body: form });
-        const data = await res.json().catch(() => ({}));
-        const ok = !!(data && data.ok);
+        const text = await res.text();      // leemos texto para depurar si llega HTML
+        let data = {};
+        try { data = JSON.parse(text); } catch (_) {}
+        console.log("Respuesta servidor:", text);
 
+        const ok = !!(data && data.ok);
         const nota = document.createElement('p');
         nota.style.color = ok ? 'green' : 'red';
         nota.textContent = ok
-          ? "✅ Resultados enviados al profesor."
+          ? `✅ Resultados enviados al profesor. (Título recibido: ${data.receivedTitle || payload.exerciseTitle})`
           : "⚠️ No se pudieron enviar los resultados automáticamente.";
         el.appendChild(nota);
 
@@ -94,6 +97,13 @@
       }
     }
 
+    function getExerciseTitle() {
+      // Prioriza el H1 visible; si no, usa <title>
+      const h1 = document.getElementById('exercise-h1');
+      const byH1 = h1 && h1.textContent ? h1.textContent.trim() : "";
+      return byH1 || document.title || "Ejercicio";
+    }
+
     function buildResultsPayload() {
       const total = totalCorrect + totalErrors;
       const percent = total === 0 ? 0 : Math.round((totalCorrect / total) * 1000) / 10; // 1 decimal
@@ -109,7 +119,7 @@
       });
 
       return {
-        exerciseTitle: document.title,   // se envía al servidor
+        exerciseTitle: getExerciseTitle(), // ← se envía al servidor
         studentName,
         totalCorrect,
         totalErrors,
@@ -250,7 +260,7 @@
         document.getElementById('summary').innerHTML = "<h3>Errores cometidos durante el ejercicio:</h3><p>Ninguno</p>";
       }
 
-      // Mostrar el botón opcional de envío
+      // Mostrar el botón “Enviar al profesor”
       const sendBtn = document.getElementById('send-teacher');
       sendBtn.style.display = 'inline-block';
       sendBtn.disabled = false;
@@ -300,7 +310,7 @@
       document.getElementById('start-button').disabled = inputName === '';
     });
 
-    // NUEVO: listener del botón "Enviar al profesor"
+    // Click en “Enviar al profesor”
     document.getElementById('send-teacher').addEventListener('click', handleSendToTeacher);
   </script>
 
