@@ -32,14 +32,14 @@
     <div id="instructions">Instrucciones: Escribe el femenino de los siguientes sintagmas. EJEMPLO: PREGUNTA: el joven RESPUESTA: la joven</div>
     <div id="progress-line">
       <div id="progress"></div>
-      <div id="score"></div>
+      <div id="score"></div>   <!-- Sólo aciertos/errores, SIN nota -->
     </div>
     <div id="question"></div>
     <input type="text" id="answer" placeholder="Escribe aquí">
     <br>
     <button id="submit" onclick="buttonAction()" disabled>Enviar</button>
     <div id="feedback"></div>
-    <div id="grade"></div> <!-- NUEVO: nota en % -->
+    <div id="grade"></div> <!-- Nota solo al finalizar -->
     <div id="correct-answers"></div>
     <div id="hint"></div>
     <div id="summary"></div>
@@ -112,7 +112,6 @@
     }
 
     function buildResultsPayload() {
-      // Reutiliza computePercent() para que lo que ve el alumno coincida con lo que se envía
       return {
         exerciseTitle: getExerciseTitle(),
         studentName,
@@ -178,8 +177,9 @@
       const currentNumber = index + 1;
       const total = fullQuestionList.length;
       document.getElementById('progress').innerText = `Pregunta ${currentNumber} de ${total}`;
+      // Solo aciertos y errores (SIN nota)
       document.getElementById('score').innerText =
-        `Aciertos: ${totalCorrect} · Errores: ${totalErrors} · Nota: ${computePercent()}%`;
+        `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
     }
 
     function pickQuestion() {
@@ -193,7 +193,7 @@
           document.getElementById('submit').disabled = false;
           document.getElementById('submit').style.display = '';
           document.getElementById('feedback').innerText = '';
-          document.getElementById('grade').innerText = ''; // limpia la nota
+          document.getElementById('grade').innerText = ''; // limpia (nota solo al final)
           document.getElementById('correct-answers').innerText = '';
           document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
           document.getElementById('summary').innerHTML = '';
@@ -209,7 +209,7 @@
         document.getElementById('answer').disabled = false;
         document.getElementById('answer').style.display = '';
         document.getElementById('feedback').innerText = '';
-        document.getElementById('grade').innerText = ''; // limpia la nota
+        document.getElementById('grade').innerText = ''; // limpia (nota solo al final)
         document.getElementById('correct-answers').innerText = '';
         document.getElementById('hint').innerText = '';
         document.getElementById('submit').innerText = 'Enviar';
@@ -254,7 +254,7 @@
       document.getElementById('correct-answers').innerText = '';
       document.getElementById('hint').innerText = '';
 
-      // Mostrar la nota final
+      // Nota final (solo aquí)
       document.getElementById('grade').innerText = `Nota: ${computePercent()}%`;
 
       // Resumen de errores únicos
