@@ -11,6 +11,7 @@
     #answer, #student-name { font-size: 18px; padding: 8px; width: 300px; }
     #submit, #start-button, #send-teacher { font-size: 18px; padding: 8px 16px; margin-top: 10px; }
     #feedback { margin-top: 20px; font-size: 18px; }
+    #grade { margin-top: 6px; font-size: 18px; font-weight: bold; }
     #correct-answers { margin-top: 10px; font-size: 16px; color: gray; }
     #hint { margin-top: 10px; font-size: 16px; color: gray; }
     #summary { margin-top: 30px; text-align: left; width: 60%; margin-left: auto; margin-right: auto; }
@@ -38,6 +39,7 @@
     <br>
     <button id="submit" onclick="buttonAction()" disabled>Enviar</button>
     <div id="feedback"></div>
+    <div id="grade"></div> <!-- NUEVO: nota en % -->
     <div id="correct-answers"></div>
     <div id="hint"></div>
     <div id="summary"></div>
@@ -50,6 +52,12 @@
     // URL del Web App (SIN /a/)
     const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxSlo-Ri5lp1L4Tt4PtjgRy8rKdNqKb_LfDTzBi78uS3GAZw0chgxZy2RIos038I4Yq-g/exec";
 
+    // === Utilidad: porcentaje con 1 decimal ===
+    function computePercent() {
+      const total = totalCorrect + totalErrors;
+      return total === 0 ? 0 : Math.round((totalCorrect / total) * 1000) / 10;
+    }
+
     // Envío sin preflight: formulario URL-encoded
     async function sendResultsToTeacher(payload) {
       const el = document.getElementById('summary');
@@ -58,16 +66,16 @@
         form.append("payload", JSON.stringify(payload));
 
         const res = await fetch(WEBHOOK_URL, { method: "POST", body: form });
-        const text = await res.text();      // leemos texto para depurar si llega HTML
+        const text = await res.text();
         let data = {};
-        try { data = JSON.parse(text); } catch (_) {}
+        try { data = JSON.parse(text); } catch(_) {}
         console.log("Respuesta servidor:", text);
 
         const ok = !!(data && data.ok);
         const nota = document.createElement('p');
         nota.style.color = ok ? 'green' : 'red';
         nota.textContent = ok
-          ? `✅ Resultados enviados al profesor. (Título recibido: ${data.receivedTitle || payload.exerciseTitle})`
+          ? `✅ Resultados enviados al profesor.`
           : "⚠️ No se pudieron enviar los resultados automáticamente.";
         el.appendChild(nota);
 
@@ -98,17 +106,24 @@
     }
 
     function getExerciseTitle() {
-      // Prioriza el H1 visible; si no, usa <title>
       const h1 = document.getElementById('exercise-h1');
       const byH1 = h1 && h1.textContent ? h1.textContent.trim() : "";
       return byH1 || document.title || "Ejercicio";
     }
 
     function buildResultsPayload() {
-      const total = totalCorrect + totalErrors;
-      const percent = total === 0 ? 0 : Math.round((totalCorrect / total) * 1000) / 10; // 1 decimal
+      // Reutiliza computePercent() para que lo que ve el alumno coincida con lo que se envía
+      return {
+        exerciseTitle: getExerciseTitle(),
+        studentName,
+        totalCorrect,
+        totalErrors,
+        percentCorrect: computePercent(),
+        errorList: buildUniqueErrorList()
+      };
+    }
 
-      // Lista de errores únicos y legibles
+    function buildUniqueErrorList() {
       const seen = new Set();
       const uniqueErrorList = [];
       errorDetails.forEach(({ question, answers }) => {
@@ -117,15 +132,7 @@
           uniqueErrorList.push(`${question} → correctas: ${answers.join(" / ")}`);
         }
       });
-
-      return {
-        exerciseTitle: getExerciseTitle(), // ← se envía al servidor
-        studentName,
-        totalCorrect,
-        totalErrors,
-        percentCorrect: percent,
-        errorList: uniqueErrorList
-      };
+      return uniqueErrorList;
     }
 
     // === Lógica del ejercicio ===
@@ -171,7 +178,8 @@
       const currentNumber = index + 1;
       const total = fullQuestionList.length;
       document.getElementById('progress').innerText = `Pregunta ${currentNumber} de ${total}`;
-      document.getElementById('score').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
+      document.getElementById('score').innerText =
+        `Aciertos: ${totalCorrect} · Errores: ${totalErrors} · Nota: ${computePercent()}%`;
     }
 
     function pickQuestion() {
@@ -185,6 +193,7 @@
           document.getElementById('submit').disabled = false;
           document.getElementById('submit').style.display = '';
           document.getElementById('feedback').innerText = '';
+          document.getElementById('grade').innerText = ''; // limpia la nota
           document.getElementById('correct-answers').innerText = '';
           document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
           document.getElementById('summary').innerHTML = '';
@@ -200,6 +209,7 @@
         document.getElementById('answer').disabled = false;
         document.getElementById('answer').style.display = '';
         document.getElementById('feedback').innerText = '';
+        document.getElementById('grade').innerText = ''; // limpia la nota
         document.getElementById('correct-answers').innerText = '';
         document.getElementById('hint').innerText = '';
         document.getElementById('submit').innerText = 'Enviar';
@@ -243,6 +253,9 @@
       document.getElementById('feedback').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
       document.getElementById('correct-answers').innerText = '';
       document.getElementById('hint').innerText = '';
+
+      // Mostrar la nota final
+      document.getElementById('grade').innerText = `Nota: ${computePercent()}%`;
 
       // Resumen de errores únicos
       if (errorDetails.length > 0) {
