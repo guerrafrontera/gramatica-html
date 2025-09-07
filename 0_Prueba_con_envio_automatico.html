@@ -11,7 +11,7 @@
     #answer, #student-name { font-size: 18px; padding: 8px; width: 300px; }
     #submit, #start-button, #send-teacher { font-size: 18px; padding: 8px 16px; margin-top: 10px; }
     #feedback { margin-top: 20px; font-size: 18px; }
-    #grade { margin-top: 6px; font-size: 18px; font-weight: bold; display: none; }
+    #grade { margin-top: 6px; font-size: 18px; font-weight: bold; display: none; } /* Nota oculta durante el ejercicio */
     #correct-answers { margin-top: 10px; font-size: 16px; color: gray; }
     #hint { margin-top: 10px; font-size: 16px; color: gray; }
     #summary { margin-top: 30px; text-align: left; width: 60%; margin-left: auto; margin-right: auto; }
@@ -32,31 +32,31 @@
     <div id="instructions">Instrucciones: Escribe el femenino de los siguientes sintagmas. EJEMPLO: PREGUNTA: el joven RESPUESTA: la joven</div>
     <div id="progress-line">
       <div id="progress"></div>
-      <div id="score"></div>
+      <div id="score"></div>   <!-- Solo aciertos/errores, sin nota -->
     </div>
     <div id="question"></div>
     <input type="text" id="answer" placeholder="Escribe aquí">
     <br>
     <button id="submit" onclick="buttonAction()" disabled>Enviar</button>
     <div id="feedback"></div>
-    <div id="grade"></div>
+    <div id="grade"></div> <!-- Nota solo al finalizar -->
     <div id="correct-answers"></div>
     <div id="hint"></div>
     <div id="summary"></div>
 
-    <!-- Botón para enviar al profesor -->
+    <!-- Botón opcional para enviar al profesor -->
     <button id="send-teacher" style="display:none; margin-top: 16px;">Enviar al profesor</button>
   </div>
 
   <script>
-    // === Configuración del ejercicio/título ===
+    // === Título del ejercicio (desde H1; fallback: <title>) ===
     const EXERCISE_TITLE = (document.getElementById('exercise-h1')?.textContent || document.title || "Ejercicio").trim();
 
-    // URL del Web App (SIN /a/) + título en querystring (cinturón #3)
-    const WEBHOOK_URL_BASE = "https://script.google.com/macros/s/AKfycbxSlo-Ri5lp1L4Tt4PtjgRy8rKdNqKb_LfDTzBi78uS3GAZw0chgxZy2RIos038I4Yq-g/exec";
+    // === URL del Web App (SIN /a/) + título en querystring (cinturón extra) ===
+    const WEBHOOK_URL_BASE = "https://script.google.com/macros/s/AKfycbxGqBTWLZFL2J0Y_tZ0mZ3xmGKVsI_UdIX2ZQhZizPDKFYfAPLrna7XJ0222sNw_88QtQ/exec";
     const WEBHOOK_URL = `${WEBHOOK_URL_BASE}?title=${encodeURIComponent(EXERCISE_TITLE)}`;
 
-    // % con 1 decimal
+    // === % con 1 decimal ===
     function computePercent() {
       const total = totalCorrect + totalErrors;
       return total === 0 ? 0 : Math.round((totalCorrect / total) * 1000) / 10;
@@ -74,11 +74,11 @@
       return uniqueErrorList;
     }
 
-    // Payload (cinturón #1 y #2)
+    // === Payload que se envía al servidor ===
     function buildResultsPayload() {
       return {
-        exerciseTitle: EXERCISE_TITLE,      // payload
-        title: EXERCISE_TITLE,              // alias en payload
+        exerciseTitle: EXERCISE_TITLE,      // en payload
+        title: EXERCISE_TITLE,              // alias
         studentName,
         totalCorrect,
         totalErrors,
@@ -87,13 +87,15 @@
       };
     }
 
-    // Envío como application/x-www-form-urlencoded (simple request)
+    // === Envío como application/x-www-form-urlencoded (simple request, sin preflight) ===
     async function sendResultsToTeacher(payload) {
       const el = document.getElementById('summary');
       try {
         const form = new URLSearchParams();
+        // Principal
         form.append("payload", JSON.stringify(payload));
-        form.append("exerciseTitle", payload.exerciseTitle); // campos extra
+        // Redundancias explícitas (para e.parameter.*)
+        form.append("exerciseTitle", payload.exerciseTitle);
         form.append("title", payload.title);
 
         const res = await fetch(WEBHOOK_URL, {
@@ -115,7 +117,7 @@
           : "⚠️ No se pudieron enviar los resultados automáticamente.";
         el.appendChild(nota);
 
-        // Mostrar explícitamente qué título recibió el servidor (visible para ti)
+        // Info visible para ti (debug): qué título dice haber recibido el servidor
         const info = document.createElement('p');
         info.style.color = '#333';
         info.textContent = `Título confirmado por el servidor: ${data.receivedTitle || 'No recibido'}`;
@@ -147,7 +149,7 @@
       }
     }
 
-    // === Lógica del ejercicio (sin cambios funcionales salvo la nota solo al final) ===
+    // === Lógica del ejercicio ===
     const allQuestions = {
       "el niño": ["la niña"],
       "el pasajero": ["la pasajera"],
@@ -184,6 +186,7 @@
       document.getElementById('start-screen').style.display = 'none';
       document.getElementById('exercise').style.display = '';
 
+      // Ocultar nota mientras se trabaja
       const gradeEl = document.getElementById('grade');
       gradeEl.style.display = 'none';
       gradeEl.innerText = '';
