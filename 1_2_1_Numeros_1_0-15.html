@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Números: 0-15</title>
+  <title>Números 1: 0-15</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #d0d0d0; }
     #instructions, #start-screen h2 { font-size: 18px; margin-bottom: 20px; }
@@ -19,7 +19,7 @@
 </head>
 <body>
 
-  <h1 id="exercise-h1">Números: 0-15</h1>
+  <h1 id="exercise-h1">Números 1: 0-15</h1>
 
   <div id="start-screen">
     <h2>Por favor, escribe tu nombre para comenzar:</h2>
@@ -29,7 +29,7 @@
   </div>
 
   <div id="exercise" style="display: none;">
-    <div id="instructions">Instrucciones: Escribe el femenino de los siguientes sintagmas. EJEMPLO: PREGUNTA: el joven RESPUESTA: la joven</div>
+    <div id="instructions">Instrucciones: Escribe el número en español. EJEMPLO: PREGUNTA: 3 RESPUESTA: tres</div>
     <div id="progress-line">
       <div id="progress"></div>
       <div id="score"></div>   <!-- Solo aciertos/errores, sin nota -->
@@ -171,14 +171,22 @@ ${buildUniqueErrorList().length ? "Lista de errores:\n- " + buildUniqueErrorList
 
     // === Lógica del ejercicio ===
     const allQuestions = {
-      "el niño": ["la niña"],
-      "el pasajero": ["la pasajera"],
-      "un estudiante": ["una estudiante"],
-      "un turista": ["una turista"],
-      "el hombre": ["la mujer"],
-      "el conductor": ["la conductora"],
-      "un profesor": ["una profesora"],
-      "un chico": ["una chica"]
+      "0": ["cero"],
+      "1": ["uno"],
+      "2": ["dos"],
+      "3": ["tres"],
+      "4": ["cuatro"],
+      "5": ["cinco"],
+      "6": ["seis"],
+      "7": ["siete"],
+      "8": ["ocho"],
+      "9": ["nueve"],
+      "10": ["diez"],
+      "11": ["once"],
+      "12": ["doce"],
+      "13": ["trece"]
+      "14": ["catorce"],
+      "15": ["quince"]
     };
 
     let fullQuestionList = Object.keys(allQuestions);
