@@ -49,7 +49,7 @@
   </div>
 
   <script>
-    // === Título del ejercicio (desde H1; fallback: <title>) ===
+    // === Título del ejercicio ===
     const EXERCISE_TITLE = (document.getElementById('exercise-h1')?.textContent || document.title || "Ejercicio").trim();
 
     // === URL del Web App (SIN /a/) + título en querystring (cinturón extra) ===
@@ -74,29 +74,48 @@
       return uniqueErrorList;
     }
 
-    // === Payload que se envía al servidor ===
+    // === Payload completo para el servidor ===
     function buildResultsPayload() {
+      const percent = computePercent();
+      const subject = `Resultados: ${EXERCISE_TITLE} - ${studentName}`;
+      const body =
+`Título del ejercicio: ${EXERCISE_TITLE}
+Nombre del estudiante: ${studentName}
+Número de aciertos: ${totalCorrect}
+Número de errores: ${totalErrors}
+% de aciertos: ${percent}%
+
+${buildUniqueErrorList().length ? "Lista de errores:\n- " + buildUniqueErrorList().join("\n- ") : "Lista de errores:\nNinguno"}
+`;
       return {
-        exerciseTitle: EXERCISE_TITLE,      // en payload
-        title: EXERCISE_TITLE,              // alias
+        // Título por duplicado
+        exerciseTitle: EXERCISE_TITLE,
+        title: EXERCISE_TITLE,
+        // Datos
         studentName,
         totalCorrect,
         totalErrors,
-        percentCorrect: computePercent(),
-        errorList: buildUniqueErrorList()
+        percentCorrect: percent,
+        errorList: buildUniqueErrorList(),
+        // Asunto y cuerpo listos (serán PRIORIDAD en el servidor)
+        subject,
+        body
       };
     }
 
-    // === Envío como application/x-www-form-urlencoded (simple request, sin preflight) ===
+    // === Envío como application/x-www-form-urlencoded (simple request) ===
     async function sendResultsToTeacher(payload) {
       const el = document.getElementById('summary');
       try {
         const form = new URLSearchParams();
         // Principal
         form.append("payload", JSON.stringify(payload));
-        // Redundancias explícitas (para e.parameter.*)
+        // Redundancias (por si el payload no se parsea)
         form.append("exerciseTitle", payload.exerciseTitle);
         form.append("title", payload.title);
+        // “Seguro extra”: también mandamos subject/body sueltos
+        form.append("subject", payload.subject);
+        form.append("body", payload.body);
 
         const res = await fetch(WEBHOOK_URL, {
           method: "POST",
@@ -110,6 +129,7 @@
         console.log("Respuesta servidor:", text);
 
         const ok = !!(data && data.ok);
+
         const nota = document.createElement('p');
         nota.style.color = ok ? 'green' : 'red';
         nota.textContent = ok
@@ -117,10 +137,10 @@
           : "⚠️ No se pudieron enviar los resultados automáticamente.";
         el.appendChild(nota);
 
-        // Info visible para ti (debug): qué título dice haber recibido el servidor
+        // Mostrar qué título/asunto usó el servidor
         const info = document.createElement('p');
         info.style.color = '#333';
-        info.textContent = `Título confirmado por el servidor: ${data.receivedTitle || 'No recibido'}`;
+        info.textContent = `Título confirmado: ${data.receivedTitle || 'No recibido'} · Asunto usado: ${data.receivedSubject || 'N/D'}`;
         el.appendChild(info);
 
         return ok;
