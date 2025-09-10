@@ -1,1 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sílabas 2</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background-color: #d0d0d0;
+    }
+    #instructions, #start-screen h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    #progress-line {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 10px;
+      font-size: 18px;
+      color: gray;
+    }
+    #question {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    #answer, #student-name {
+      font-size: 18px;
+      padding: 8px;
+      width: 300px;
+    }
+    #submit, #start-button {
+      font-size: 18px;
+      padding: 8px 16px;
+      margin-top: 10px;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    #correct-answers {
+      margin-top: 10px;
+      font-size: 16px;
+      color: gray;
+    }
+    #hint {
+      margin-top: 10px;
+      font-size: 16px;
+      color: gray;
+    }
+    #summary {
+      margin-top: 30px;
+      text-align: left;
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
 
+  <h1>Sílabas 2</h1>
+
+  <div id="start-screen">
+    <h2>Por favor, escribe tu nombre para comenzar:</h2>
+    <input type="text" id="student-name" placeholder="Tu nombre">
+    <br>
+    <button id="start-button" onclick="startExercise()" disabled>Comenzar</button>
+  </div>
+
+  <div id="exercise" style="display: none;">
+    <div id="instructions">Instrucciones: Divide las palabras en sílabas. EJEMPLO: PREGUNTA: maleta RESPUESTA: ma le ta</div>
+    <div id="progress-line">
+      <div id="progress"></div>
+      <div id="score"></div>
+    </div>
+    <div id="question"></div>
+    <input type="text" id="answer" placeholder="Escribe aquí">
+    <br>
+    <button id="submit" onclick="buttonAction()" disabled>Enviar</button>
+    <div id="feedback"></div>
+    <div id="correct-answers"></div>
+    <div id="hint"></div>
+    <div id="summary"></div>
+  </div>
+
+  <script>
+    const allQuestions = {
+         "borrador": ["bo rra dor"],
+      "biología": ["bio lo gí a"],
+      "prueba": ["prue ba"],
+      "mochila": ["mo chi la"],
+      "silla": ["si lla"],
+      "examen": ["e xa men"],
+      "arte": ["ar te"],
+      "inglés": ["in glés"],
+      "geografía": ["ge o gra fí a"],
+      "psicología": ["psi co lo gí a"],
+      "almuerzo": ["al muer zo"],
+      "contabilidad": ["con ta bi li dad"],
+      "traición": ["trai ción"],
+      "vainilla": ["vai ni lla"],
+      "obstinado": ["obs ti na do"]
+    };
+
+    let fullQuestionList = Object.keys(allQuestions);
+    let currentAnswers = [];
+    let errors = [];
+    let errorDetails = [];
+    let totalErrors = 0;
+    let totalCorrect = 0;
+    let phase = 'normal';
+    let index = 0;
+    let currentQuestion = '';
+    let waitingToContinue = false;
+    let studentName = '';
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function startExercise() {
+      studentName = document.getElementById('student-name').value.trim();
+      shuffleArray(fullQuestionList);
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('exercise').style.display = '';
+      pickQuestion();
+    }
+
+    function updateProgress() {
+      const currentNumber = index + 1;
+      const total = fullQuestionList.length;
+      document.getElementById('progress').innerText = `Pregunta ${currentNumber} de ${total}`;
+      document.getElementById('score').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
+    }
+
+    function pickQuestion() {
+      if (index >= fullQuestionList.length) {
+        if (errors.length === 0) {
+          showCompletion();
+        } else {
+          document.getElementById('question').innerText = '¡Vamos a corregir los errores!';
+          document.getElementById('answer').style.display = 'none';
+          document.getElementById('submit').innerText = 'Continuar';
+          document.getElementById('submit').disabled = false;
+          document.getElementById('submit').style.display = '';
+          document.getElementById('feedback').innerText = '';
+          document.getElementById('correct-answers').innerText = '';
+          document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
+          document.getElementById('summary').innerHTML = '';
+          waitingToContinue = true;
+          phase = 'prepare_review';
+          return;
+        }
+      } else {
+        currentQuestion = fullQuestionList[index];
+        currentAnswers = allQuestions[currentQuestion];
+        document.getElementById('question').innerText = currentQuestion;
+        document.getElementById('answer').value = '';
+        document.getElementById('answer').disabled = false;
+        document.getElementById('answer').style.display = '';
+        document.getElementById('feedback').innerText = '';
+        document.getElementById('correct-answers').innerText = '';
+        document.getElementById('hint').innerText = '';
+        document.getElementById('submit').innerText = 'Enviar';
+        document.getElementById('submit').disabled = true;
+        document.getElementById('submit').style.display = '';
+        waitingToContinue = false;
+        updateProgress();
+        document.getElementById('answer').focus();
+      }
+    }
+
+    function checkAnswer() {
+      const userAnswer = document.getElementById('answer').value.trim();
+      const correct = currentAnswers.some(ans => ans === userAnswer);
+      if (correct) {
+        totalCorrect++;
+        document.getElementById('feedback').innerText = "✅ ¡Correcto!";
+        document.getElementById('feedback').style.color = "green";
+      } else {
+        document.getElementById('feedback').innerText = "❌ Incorrecto.";
+        document.getElementById('feedback').style.color = "red";
+        totalErrors++;
+        errors.push(currentQuestion);
+        errorDetails.push({ question: currentQuestion, answers: currentAnswers });
+      }
+
+      document.getElementById('correct-answers').innerText = "Respuestas posibles: " + currentAnswers.join(" / ");
+      document.getElementById('submit').innerText = 'Continuar';
+      document.getElementById('answer').disabled = true;
+      document.getElementById('submit').disabled = false;
+      document.getElementById('hint').innerText = 'Pulsa ENTER o haz clic en CONTINUAR';
+      waitingToContinue = true;
+      updateProgress();
+    }
+
+    function showCompletion() {
+      document.getElementById('progress-line').style.display = 'none';
+      document.getElementById('question').innerText = `¡Felicitaciones, ${studentName}! Terminaste el ejercicio.`;
+      document.getElementById('answer').style.display = 'none';
+      document.getElementById('submit').style.display = 'none';
+      document.getElementById('feedback').innerText = `Aciertos: ${totalCorrect} · Errores: ${totalErrors}`;
+      document.getElementById('correct-answers').innerText = '';
+      document.getElementById('hint').innerText = '';
+
+      // Mostrar resumen de errores únicos
+      if (errorDetails.length > 0) {
+        const seen = new Set();
+        let summaryHTML = "<h3>Errores cometidos durante el ejercicio:</h3><ul>";
+        errorDetails.forEach(entry => {
+          if (!seen.has(entry.question)) {
+            seen.add(entry.question);
+            summaryHTML += `<li><strong>${entry.question}</strong><br>Respuestas correctas: ${entry.answers.join(", ")}</li>`;
+          }
+        });
+        summaryHTML += "</ul>";
+        document.getElementById('summary').innerHTML = summaryHTML;
+      }
+    }
+
+    function buttonAction() {
+      if (!waitingToContinue) {
+        checkAnswer();
+      } else {
+        if (phase === 'prepare_review') {
+          phase = 'review';
+          fullQuestionList = [...errors];
+          errors = [];
+          index = 0;
+          waitingToContinue = false;
+          pickQuestion();
+        } else {
+          index++;
+          pickQuestion();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (document.getElementById('start-screen').style.display !== 'none') {
+          if (!document.getElementById('start-button').disabled) {
+            startExercise();
+          }
+        } else if (!document.getElementById('submit').disabled) {
+          buttonAction();
+        }
+      }
+    });
+
+    document.getElementById('answer').addEventListener('input', function () {
+      const inputContent = document.getElementById('answer').value.trim();
+      if (!waitingToContinue) {
+        document.getElementById('submit').disabled = inputContent === '';
+      }
+    });
+
+    document.getElementById('student-name').addEventListener('input', function () {
+      const inputName = document.getElementById('student-name').value.trim();
+      document.getElementById('start-button').disabled = inputName === '';
+    });
+  </script>
+
+</body>
+</html>
