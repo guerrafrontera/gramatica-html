@@ -71,7 +71,7 @@
   </div>
 
   <div id="exercise" style="display: none;">
-    <div id="instructions">Instrucciones: Llena los espacios en blanco con la forma correcta del verbo SER. EJEMPLO: PREGUNTA: Yo _____ de Cuba. RESPUESTA: soy</div>
+    <div id="instructions">Instrucciones: Llena los espacios en blanco con la forma correcta del verbo SER. EJEMPLO: PREGUNTA: Yo ___ de Cuba. RESPUESTA: soy</div>
     <div id="progress-line">
       <div id="progress"></div>
       <div id="score"></div>
@@ -88,13 +88,21 @@
 
   <script>
     const allQuestions = {
-         "¿Cuántas chicas hay en la foto? (21)": ["Hay veintiuna chicas en la foto."],
-      "¿Cuántos chicos hay en la foto? (21)": ["Hay veintiún chicos en la foto."],
-      "¿Cuántas computadoras hay en la maleta? (1)": ["Hay una computadora en la maleta."],
-      "¿Cuántos conductores hay en el autobús? (1)": ["Hay un conductor en el autobús."],
-      "¿Cuántos países hay en el mapa? (26)": ["Hay veintiséis países en el mapa."],
-      "¿Cuántas mujeres hay en la comunidad? (13)": ["Hay trece mujeres en la comunidad."],
-      "¿Cuántos pasajeros hay en el autobús? (15)": ["Hay quince pasajeros en el autobús."]
+         "María ___ actriz.": ["es"],
+      "Javier y Lucas ___ profesores.": ["son"],
+      "Vosotros ___ cantantes.": ["sois"],
+      "Gabriel García Márquez ___ escritor.": ["es"],
+      "Yo ___ de Perú.": ["soy"],
+      "Tú ___ de Argentina.": ["eres"],
+      "Vosotros ___ de Ecuador.": ["sois"],
+      "Nosotros ___ deportistas.": ["somos"],
+      "Lucía y yo ___ músicos.": ["somos"],
+      "Tú y ella ___ son de Guatemala.": ["son"],
+      "___ una comunidad.": ["Es"],
+      "___ el cuaderno de Jesús.": ["Es"],
+      "___ los lápices de Juan.": ["Son"],
+      "___ los libros de María.": ["Son"],
+      "Ustedes ___ conductores.": ["son"]
     };
 
     let fullQuestionList = Object.keys(allQuestions);
