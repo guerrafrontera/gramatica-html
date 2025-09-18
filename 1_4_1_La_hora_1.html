@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Números 5: Preguntas</title>
+  <title>¿Qué hora es?</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -61,7 +61,7 @@
 </head>
 <body>
 
-  <h1>Números 5: Preguntas</h1>
+  <h1>¿Qué hora es?</h1>
 
   <div id="start-screen">
     <h2>Por favor, escribe tu nombre para comenzar:</h2>
@@ -71,7 +71,7 @@
   </div>
 
   <div id="exercise" style="display: none;">
-    <div id="instructions">Instrucciones: Escribe la pregunta para cada respuesta./Write the question for each answer. EJEMPLO: RESPUESTA: Hay cinco estudiantes en el autobús. (5) PREGUNTA: ¿Cuántos estudiantes hay en el autobús?.</div>
+    <div id="instructions">Instrucciones: Escribe qué hora es. EJEMPLO: 5:10 PM. RESPUESTA: Son las cinco y diez de la tarde.</div>
     <div id="progress-line">
       <div id="progress"></div>
       <div id="score"></div>
@@ -88,11 +88,17 @@
 
   <script>
     const allQuestions = {
-         "Hay treinta chicos en la comunidad.": ["¿Cuántos chicos hay en la comunidad?"],
-      "Hay dieciocho mujeres en la foto.": ["¿Cuántas mujeres hay en la foto?"],
-      "Hay veintinueve computadoras en la maleta.": ["¿Cuántas computadoras hay en la maleta?"],
-      "Hay once países en el mapa.": ["¿Cuántos países hay en el mapa?"],
-      "Hay doce hombres en el autobús.": ["¿Cuántos hombres hay en el autobús?"]
+         "1:30": ["Es la una y media.", "Es la una y treinta."],
+      "2:15": ["Son las dos y cuarto.", "Son las dos y quince."],
+      "3:10 PM": ["Son las tres y diez de la tarde."],
+      "4:20 AM": ["Son las cuatro y veinte de la mañana."],
+      "8:05 PM": ["Son las ocho y cinco de la noche."],
+      "6:45 AM": ["Son las siete menos cuarto de la mañana.", "Son las siete menos quince de la mañana."],
+      "10:40 PM": ["Son las once menos veinte de la noche."],
+      "12:00 AM": ["Es la medianoche."],
+      "12:00 PM": ["Es el mediodía."],
+      "4:55": ["Son las cinco menos cinco."],
+      "5:50 PM": ["Son las seis menos diez de la tarde."]
     };
 
     let fullQuestionList = Object.keys(allQuestions);
